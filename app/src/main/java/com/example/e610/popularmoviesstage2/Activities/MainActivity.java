@@ -1,4 +1,4 @@
-package com.example.e610.popularmoviesstage2.Activities;
+ package com.example.e610.popularmoviesstage2.Activities;
 
 import android.app.Activity;
 import android.content.Context;
@@ -29,10 +29,17 @@ import com.example.e610.popularmoviesstage2.R;
 import com.example.e610.popularmoviesstage2.Utils.FetchData;
 import com.example.e610.popularmoviesstage2.Utils.MySharedPreferences;
 import com.example.e610.popularmoviesstage2.Utils.NetworkResponse;
-
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements MainFragment.SendToMainActivity {
+
+
+
+    /******firstTime******/
+    // I use "firstTime" variable to prevent spinner.OnItemSelectedListener()
+    // from auto calling method onItemSelected() when onCreate() called
+    // or "setting spinner adapter  pinner.setAdapter(SpinnerAdapter);"
+    boolean firstTime;
 
     boolean InstanceState;
 
@@ -58,6 +65,8 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Send
            super.onCreate(savedInstanceState);
            setContentView(R.layout.activity_main);
 
+           /******firstTime******/
+           firstTime=true;
 
            CurrentActivity = this;
            ctx = this;
@@ -67,7 +76,7 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Send
            IsTablet = getResources().getBoolean(R.bool.isTablet);
            mySharedPreferences = new MySharedPreferences(this, "FavouriteMovies");
 
-
+/******** ?????? *********/
            if (savedInstanceState == null) {
                getFragmentManager().beginTransaction().add(R.id.MainFragment, mainFragment).commit();
                InstanceState = false;
@@ -93,9 +102,10 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Send
             context=view.getContext();
             MoviesRecyclerView=(RecyclerView) view.findViewById(R.id.MoviesRecyclerView);
             MoviesRecyclerView.setLayoutManager(new GridLayoutManager(context,2));
+            //MoviesRecyclerView.setLayoutManager(new StaggeredGridLayoutManager(3,1));
 
             if(IsTablet)
-                MoviesRecyclerView.setLayoutManager(new GridLayoutManager(context,3));
+                MoviesRecyclerView.setLayoutManager(new GridLayoutManager(context,2));
             else
                 MoviesRecyclerView.setLayoutManager(new GridLayoutManager(context,2));
 
@@ -106,7 +116,10 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Send
             spinner.setAdapter(SpinnerAdapter);
 
 
+
             DisplayMovies();
+
+
 
         }catch (Exception e){
             Log.e("error","hellooooooooooooooooo",e); Toast.makeText(MainActivity.ctx,"Error *_*", Toast.LENGTH_SHORT).show(); }
@@ -115,37 +128,36 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Send
 
 
 
-    public void DisplayMovies(){
+    public void DisplayMovies() {
 
-        if(mySharedPreferences.IsFirstTime()){
-            mySharedPreferences.Clear();
-            mySharedPreferences.FirstTime();
-            collectData("Popular Movies");
-        }
-        else {
-            String key=mySharedPreferences.getUserSetting();
-            if(key.equals("Popular Movies")||key.equals("")) {
+            if (mySharedPreferences.IsFirstTime()) {
+                mySharedPreferences.Clear();
+                mySharedPreferences.FirstTime();
                 collectData("Popular Movies");
-                spinner.setSelection(0); // 0 index of "Popular Movies" in a Spinner also I can get it by  SpinnerAdapter.getPosition("Popular Movies");
+            } else {
+                String key = mySharedPreferences.getUserSetting();
+                if (key.equals("Popular Movies") || key.equals("")) {
+                    collectData("Popular Movies");
+                    spinner.setSelection(0,false); // 0 index of "Popular Movies" in a Spinner also I can get it by  SpinnerAdapter.getPosition("Popular Movies");
+                } else if (key.equals("Top Rated Movies")) {
+                    collectData("Top Rated Movies");
+                    spinner.setSelection(1,false);  // 1 index of "Top Rated Movies" in a Spinner
+                } else if (key.equals("Favourite Movies")) {
+                    DisplayFavouriteMovies();
+                    spinner.setSelection(2,false); // 2 index of "Favourite Movies" in a Spinner
+                }
             }
-            else if(key.equals("Top Rated Movies")) {
-                collectData("Top Rated Movies");
-                spinner.setSelection(1);  // 1 index of "Top Rated Movies" in a Spinner
-            }
-            else if(key.equals("Favourite Movies")){
-                DisplayFavouriteMovies();
-                spinner.setSelection(2); // 2 index of "Favourite Movies" in a Spinner
-            }
-        }
-        }
+    }
+
 
     private void DisplayFavouriteMovies() {
 
-        Movies=getFavouriteMovies();
-        movieAdapter=new MovieAdapter(Movies,context);
-        MoviesRecyclerView.setAdapter(movieAdapter);
-        CheckTablet();
-        ClickEvent();
+            Movies = getFavouriteMovies();
+            movieAdapter = new MovieAdapter(Movies, context);
+            MoviesRecyclerView.setAdapter(movieAdapter);
+            CheckTablet();
+            ClickEvent();
+
     }
 
     private ArrayList<Movie> getFavouriteMovies() {
@@ -180,43 +192,44 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Send
 
 
     // this method for fetch  movies data
-    public void collectData(String Key){
+    public void collectData(String Key) {
 
-        if(MainActivity.NetworkState()) {
-            FetchData fetchData = new FetchData(Key, "");
-            ClickEvent();
-            fetchData.execute();
+            if (MainActivity.NetworkState()) {
+                FetchData fetchData = new FetchData(Key, "");
+                ClickEvent();
+                fetchData.execute();
 
-            fetchData.setNetworkResponse(new NetworkResponse() {
+                fetchData.setNetworkResponse(new NetworkResponse() {
 
-                @Override
-                public void OnSuccess(String JsonData) {
+                    @Override
+                    public void OnSuccess(String JsonData) {
 
-                    Movies = Movie.ParsingMoviesData(JsonData);
-                    movieAdapter = new MovieAdapter(Movies, context);
-                    MoviesRecyclerView.setAdapter(movieAdapter);
+                        Movies = Movie.ParsingMoviesData(JsonData);
+                        movieAdapter = new MovieAdapter(Movies, context);
+                        MoviesRecyclerView.setAdapter(movieAdapter);
 
-                    if(JsonData==null)
-                        Toast.makeText(MainActivity.ctx," No Internet Connection", Toast.LENGTH_SHORT).show();
-                    ClickEvent();
-                    CheckTablet();
-                }
+                        if (JsonData == null)
+                            Toast.makeText(MainActivity.ctx, " No Internet Connection", Toast.LENGTH_SHORT).show();
+                        ClickEvent();
+                        CheckTablet();
+                    }
 
-                @Override
-                public void OnUpdate(boolean IsDataReceived) {
+                    @Override
+                    public void OnUpdate(boolean IsDataReceived) {
 
-                }
-            });
-        }
-        else{
-            Movies = new ArrayList<>();
-            movieAdapter = new MovieAdapter(Movies, context);
-            MoviesRecyclerView.setAdapter(movieAdapter);
-            Toast.makeText(this," No Internet Connection", Toast.LENGTH_SHORT).show();
-            ClickEvent();
-            CheckTablet();
-        }
+                    }
+                });
+            } else {
+                Movies = new ArrayList<>();
+                movieAdapter = new MovieAdapter(Movies, context);
+                MoviesRecyclerView.setAdapter(movieAdapter);
+                Toast.makeText(this, " No Internet Connection", Toast.LENGTH_SHORT).show();
+                ClickEvent();
+                CheckTablet();
+            }
+
     }
+
 
 
 
@@ -244,32 +257,39 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Send
         });
 
 
+      //firstTime=true;
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                if(view!=null) {
-                    checkFrag=false;
-                    TextView textView = (TextView) view;
-                    String SpinnerKey = textView.getText() + "";
-                    if (SpinnerKey.equals("Popular Movies")){
-                        collectData("Popular Movies");
-                        mySharedPreferences.setUserSetting(SpinnerKey);
-                        DetailedFragment.IsFavouriteSelected(false);
+                /******firstTime******/
+                if (!firstTime) {
+
+                    if (view != null) {
+                        checkFrag = false;
+                        TextView textView = (TextView) view;
+                        String SpinnerKey = textView.getText() + "";
+                        if (SpinnerKey.equals("Popular Movies")) {
+                            collectData("Popular Movies");
+                            mySharedPreferences.setUserSetting(SpinnerKey);
+                            DetailedFragment.IsFavouriteSelected(false);
+                        } else if (SpinnerKey.equals("Top Rated Movies")) {
+                            collectData("Top Rated Movies");
+                            mySharedPreferences.setUserSetting(SpinnerKey);
+                            DetailedFragment.IsFavouriteSelected(false);
+                        } else if (SpinnerKey.equals("Favourite Movies")) {
+                            mySharedPreferences.setUserSetting(SpinnerKey);
+                            DisplayFavouriteMovies();
+                            DetailedFragment.IsFavouriteSelected(true);
+                        }
                     }
 
-                    else if (SpinnerKey.equals("Top Rated Movies")){
-                        collectData("Top Rated Movies");
-                        mySharedPreferences.setUserSetting(SpinnerKey);
-                        DetailedFragment.IsFavouriteSelected(false);
-                    }
-                    else if (SpinnerKey.equals("Favourite Movies")){
-                        mySharedPreferences.setUserSetting(SpinnerKey);
-                        DisplayFavouriteMovies();
-                        DetailedFragment.IsFavouriteSelected(true);
-                    }
+                } else {
+                    /******firstTime******/
+                    firstTime = false;
                 }
 
             }
+
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
@@ -301,4 +321,7 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Send
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
+
+
+
 }
