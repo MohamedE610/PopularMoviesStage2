@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -147,8 +148,23 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Send
             }
     }
 
+    // To fix this problem
+    //this is one of advice of a Udacity Reviewer
+    /*Your favorite logic works fine but when your sort order is favorite
+    and you click on UN-Favorite button in DetailActivity your app doesn't update the main view properly
+    (the movie you've deleted from your favorites list is still visible and goes away only by destroying/recreating MainActivity) .
+     A possible solution is to load favorites in onResume method. Something like this:
+     if select sort is favorite movie {
+       load favorites
+     }*/
+    @Override
+    protected void onResume() {
+        if(mySharedPreferences.getUserSetting().equals("Favourite Movies"))
+            DisplayFavouriteMovies();
+        super.onResume();
+    }
 
-    private void DisplayFavouriteMovies() {
+    public void DisplayFavouriteMovies() {
 
             Movies = getFavouriteMovies();
             movieAdapter = new MovieAdapter(Movies, context);
