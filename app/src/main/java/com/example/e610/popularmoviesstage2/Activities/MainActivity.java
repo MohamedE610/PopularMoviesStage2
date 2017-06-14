@@ -101,7 +101,6 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Send
             view=v;
             context=view.getContext();
             MoviesRecyclerView=(RecyclerView) view.findViewById(R.id.MoviesRecyclerView);
-            MoviesRecyclerView.setLayoutManager(new GridLayoutManager(context,2));
 
             if(IsTablet)
                 MoviesRecyclerView.setLayoutManager(new GridLayoutManager(context,3));
