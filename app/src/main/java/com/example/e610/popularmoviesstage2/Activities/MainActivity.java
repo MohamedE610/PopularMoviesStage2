@@ -102,10 +102,9 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Send
             context=view.getContext();
             MoviesRecyclerView=(RecyclerView) view.findViewById(R.id.MoviesRecyclerView);
             MoviesRecyclerView.setLayoutManager(new GridLayoutManager(context,2));
-            //MoviesRecyclerView.setLayoutManager(new StaggeredGridLayoutManager(3,1));
 
             if(IsTablet)
-                MoviesRecyclerView.setLayoutManager(new GridLayoutManager(context,2));
+                MoviesRecyclerView.setLayoutManager(new GridLayoutManager(context,3));
             else
                 MoviesRecyclerView.setLayoutManager(new GridLayoutManager(context,2));
 
